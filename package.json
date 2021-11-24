@@ -1,0 +1,37 @@
+{
+  "name": "taxios",
+  "version": "1.0.0",
+  "description": "Taxios(throttle-axios), using LRU algorithm to achieve caching, can automatically cancel repeated requests.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShiverZheng/taxios.git"
+  },
+  "keywords": [
+    "axios",
+    "LRU",
+    "trottle",
+    "cache"
+  ],
+  "author": "Sivan Zheng",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ShiverZheng/taxios/issues"
+  },
+  "homepage": "https://github.com/ShiverZheng/taxios#readme",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "md5": "^2.3.0"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.16.0",
+    "@types/jest": "^27.0.3",
+    "@types/md5": "^2.3.1",
+    "jest": "^27.3.1",
+    "ts-jest": "^27.0.7"
+  }
+}
