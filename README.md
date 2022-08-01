@@ -5,8 +5,7 @@ Taxios(throttle-axios), using LRU algorithm to achieve caching, can automaticall
 
 You need to implement the abstract class like this:
 ```ts
-
-class ConcreteTaxios extends Taxios {
+class AbstractTaxios extends Taxios {
     onFaild(err: string, errCode: number) {
         // You need to handle the error when the request fails
         console.error(err, errCode)
@@ -18,10 +17,50 @@ Taxios.config = {
     baseURL: 'https://api.example.com'
 }
 
-const taxios = new ConcreteTaxios()
+// Set your interceptors
+Taxios.interceptors = {
+    request: [
+        (config) => {
+            // Do what you want before the request
+            console.log('request interceptor 1')
+            return Promise.resolve(config)
+        },
+        (config) => {
+            console.log('request interceptor 2')
+            return Promise.resolve(config)
+        },
+    ],
+    response: [
+        (res) => {
+            // Do what you want after getting the response
+            console.log('response interceptor: 1', res)
+            return Promise.resolve(res)
+        },
+        (res) => {
+            console.log('response interceptor: 2', res)
+            return Promise.resolve(res)
+        },
+    ],
+}
+
+const taxios = new AbstractTaxios()
 
 export default taxios
 ```
+
+> The order of execution of the interceptors is
+
+> for request: 
+> 1. request interceptor 1
+> 2. request interceptor 2
+> 3. and so on...
+> 4. the default request interceptor in taxios
+
+> for request: 
+> 1. response interceptor 1
+> 2. response interceptor 2
+> 3. and so on...
+> 4. the default response interceptor in taxios
 
 ## Configurations
 taxios extends axios's configurations
