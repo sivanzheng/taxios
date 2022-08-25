@@ -56,7 +56,7 @@ export default taxios
 > 3. and so on...
 > 4. the default request interceptor in taxios
 
-> for request: 
+> for response: 
 > 1. response interceptor 1
 > 2. response interceptor 2
 > 3. and so on...
