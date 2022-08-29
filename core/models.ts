@@ -1,4 +1,8 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { AxiosRequestConfig, AxiosResponse, AxiosError as Err } from 'axios'
+
+export type AxiosError = Err
+
+export type Response<T> = AxiosResponse<T>
 
 export interface Config<T = any> extends AxiosRequestConfig<T> {
     capacity?: number
@@ -6,7 +10,11 @@ export interface Config<T = any> extends AxiosRequestConfig<T> {
     cancelable?: boolean
 }
 
+export type RequestInterceptor = (config: Config) => Promise<Config>
+
+export type ResponseInterceptor = <T, D>(response: T | AxiosResponse<T>) => Promise<AxiosResponse | D>;
+
 export interface Interceptors {
-    request?: ((config: Config) => Promise<Config>)[]
-    response?: ((response: AxiosResponse) => Promise<AxiosResponse>)[]
+    request: RequestInterceptor[]
+    response: ResponseInterceptor[]
 }
