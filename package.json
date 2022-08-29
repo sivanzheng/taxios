@@ -1,10 +1,12 @@
 {
   "name": "throttle-axios",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Taxios(throttle-axios), using LRU algorithm to achieve caching, can automatically cancel repeated requests.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": ["lib/**/*"],
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
     "test": "jest",
     "build": "tsc",

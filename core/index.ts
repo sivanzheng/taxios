@@ -6,15 +6,16 @@ import axios, {
     Canceler,
 } from 'axios'
 import LRUCache from './LRUCache'
-import { Config, Interceptors } from './models'
-import { generateHash, CANCEL_MESSAGE, NEED_CONFIG } from './utils'
+import { Config, RequestInterceptor } from './models'
+import { generateHash, CANCEL_MESSAGE, NEED_CONFIG, pipe } from './utils'
 
 export default abstract class Taxios {
     readonly cache: LRUCache
     readonly cancelers: Map<string, Canceler>
 
-    constructor(
-    ) {
+    private responseInterceptors: ((res: any) => any)[] = []
+
+    constructor() {
         this.cache = new LRUCache(Taxios.config.capacity || 100)
 
         this.cancelers = new Map()
@@ -24,42 +25,43 @@ export default abstract class Taxios {
             (error) => Promise.reject(error),
         )
 
-        if (Taxios.interceptors && Taxios.interceptors.request) {
-            for (const interceptor of Taxios.interceptors.request.reverse()) {
-                this.instance.interceptors.request.use(
-                    interceptor,
-                    (error) => Promise.reject(error),
-                )
-            }
-        }
-
-        if (Taxios.interceptors && Taxios.interceptors.response) {
-            for (const interceptor of Taxios.interceptors.response) {
-                this.instance.interceptors.response.use(
-                    interceptor,
-                    (error) => Promise.reject(error),
-                )
-            }
-        }
-
         this.instance.interceptors.response.use(
             this.responseCacheInterceptor,
             this.responseErrorInterceptor,
         )
     }
 
-    abstract onFaild(err: string, errCode: number): void
+    abstract onFaild(err: AxiosError): void
 
-    private static taxiosInterceptors: Interceptors
 
-    static get interceptors(): Interceptors {
-        if (!Taxios.taxiosInterceptors) return { request: [], response: [] }
-        return Taxios.taxiosInterceptors
-    }
-
-    static set interceptors(interceptors: Interceptors) {
-        Taxios.taxiosInterceptors = interceptors
-    }
+    interceptors = new Proxy<{
+        request?: RequestInterceptor | null,
+        response?<T, D>(res: T): Promise<D>
+        response?(res: AxiosResponse): Promise<AxiosResponse>
+        response?<T>(res: AxiosResponse<T>): Promise<AxiosResponse<T>>
+        response?<T, D>(res: T | AxiosResponse<T>): Promise<D> | Promise<AxiosResponse<T>>
+    }>(
+        {},
+        {
+            get: (target, key, receiver) => Reflect.get(target, key, receiver),
+            set: (target, key, value, receiver) => {
+                if (key === 'request') {
+                    this.instance.interceptors.request.use(
+                        value,
+                        (error) => Promise.reject(error),
+                    )
+                }
+                if (key === 'response') {
+                    this.responseInterceptors.push(value)
+                    this.instance.interceptors.response.use(
+                        value,
+                        (error) => Promise.reject(error),
+                    )
+                }
+                return Reflect.set(target, key, value, receiver);
+            }
+        }
+    )
 
     private static taxiosConfig: AxiosRequestConfig
 
@@ -103,10 +105,7 @@ export default abstract class Taxios {
     }
 
     private responseErrorInterceptor = (err: AxiosError) => {
-        const { response } = err
-        let { message } = err
-        if (response) message = response.statusText
-        this.onFaild(message, response?.status || 500)
+        this.onFaild(err)
         return Promise.reject(err)
     }
 
@@ -151,7 +150,9 @@ export default abstract class Taxios {
     ): Promise<AxiosResponse<T>> {
         if (config && config.cacheable) {
             const result = this.checkCache({ ...config, url, method: 'POST' })
-            if (result) return result
+            if (result) {
+                return await pipe(...this.responseInterceptors)(result)
+            } 
         }
         const data = config?.data
         return this.instance.post<T, AxiosResponse<T, D>, D>(url, data, Object.assign(Object.create({}), Taxios.config, config))

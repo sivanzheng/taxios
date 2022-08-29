@@ -24,6 +24,8 @@ export const generateHash = (config: Config) => {
     return md5(JSON.stringify({ url, payload, method: m }))
 }
 
+export const pipe = (...fns: any[]) => (x: any) => fns.reduce((p, fn) => p.then(fn), Promise.resolve(x))
+
 export const CANCEL_MESSAGE = 'There is the same request in pengding state, the request has been cancelled.'
 
 export const NEED_CONFIG = 'You should configure Taxios first.'
