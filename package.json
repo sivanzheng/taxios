@@ -1,6 +1,6 @@
 {
   "name": "throttle-axios",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Taxios(throttle-axios), using LRU algorithm to achieve caching, can automatically cancel repeated requests.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -20,7 +20,7 @@
   "keywords": [
     "axios",
     "LRU",
-    "trottle",
+    "throttle",
     "cache"
   ],
   "author": "Sivan Zheng",
@@ -31,6 +31,7 @@
   "homepage": "https://github.com/ShiverZheng/taxios#readme",
   "dependencies": {
     "axios": "0.27.2",
+    "axios-auth-refresh": "^3.3.4",
     "md5": "2.3.0"
   },
   "devDependencies": {

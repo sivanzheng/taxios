@@ -11,8 +11,8 @@ Taxios.config = {
 }
 
 class AbstractTaxios extends Taxios {
-    onFaild(err: string, errCode: number) {
-        // You need to handle the error when the request fails
+    // All errors with http status !== 200 will appear here
+    async onFailed(err: AxiosError) {
         console.error(err, errCode)
     }
 }
@@ -74,4 +74,8 @@ Use the [LRU](./https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_r
 
 ## [Cancellation](https://axios-http.com/docs/cancellation)
 
-If there is a request consistent with the status of pengding, it will be cancelled.
+If there is a request consistent with the status of pending, it will be cancelled.
+
+## [Axios Auth Refresh]((https://github.com/Flyrell/axios-auth-refresh#usage))
+
+Refresh the token by implementing the **onTokenExpired**.
