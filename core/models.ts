@@ -1,6 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosError as Err } from 'axios'
 
-export type AxiosError = Err
+export type AxiosError<T = unknown, D = any> = Err<T, D>
 
 export type Response<T> = AxiosResponse<T>
 

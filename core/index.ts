@@ -5,6 +5,7 @@ import axios, {
     AxiosRequestConfig,
     Canceler,
 } from 'axios'
+import createAuthRefreshInterceptor from 'axios-auth-refresh'
 import LRUCache from './LRUCache'
 import { Config, RequestInterceptor } from './models'
 import { generateHash, CANCEL_MESSAGE, NEED_CONFIG, pipe } from './utils'
@@ -20,6 +21,8 @@ export default abstract class Taxios {
 
         this.cancelers = new Map()
 
+        createAuthRefreshInterceptor(this.instance, this.onTokenExpired)
+
         this.instance.interceptors.request.use(
             this.requestCancelerInterceptor,
             (error) => Promise.reject(error),
@@ -27,11 +30,12 @@ export default abstract class Taxios {
 
         this.instance.interceptors.response.use(
             this.responseCacheInterceptor,
-            this.responseErrorInterceptor,
+            (error) => this.onFailed(error)
         )
     }
 
-    abstract onFaild(err: AxiosError): void
+    abstract onTokenExpired(err: AxiosError): Promise<any>
+    abstract onFailed(err: AxiosError): Promise<any>
 
 
     interceptors = new Proxy<{
@@ -74,7 +78,7 @@ export default abstract class Taxios {
         Taxios.taxiosConfig = config
     }
 
-    private axiosInstance: AxiosInstance | undefined
+    public axiosInstance: AxiosInstance | undefined
 
     get instance() {
         if (!this.axiosInstance) {
@@ -104,11 +108,6 @@ export default abstract class Taxios {
         return Promise.resolve(response)
     }
 
-    private responseErrorInterceptor = (err: AxiosError) => {
-        this.onFaild(err)
-        return Promise.reject(err)
-    }
-
     private checkCache(config: Config) {
         const hash = generateHash(config)
         const value = this.cache.get(hash)
@@ -133,21 +132,21 @@ export default abstract class Taxios {
         }
     }
 
-    async get<T = any, D = any>(
+    async get<R = unknown, D = unknown>(
         url: string,
         config?: Config<D>,
-    ): Promise<AxiosResponse<T>> {
+    ): Promise<R> {
         if (config && config.cacheable) {
             const result = this.checkCache({ ...config, url, method: 'GET' })
             if (result) return result
         }
-        return this.instance.get<T, AxiosResponse<T, D>, D>(url, Object.assign(Object.create({}), Taxios.config, config))
+        return this.instance.get(url, Object.assign(Object.create({}), Taxios.config, config))
     }
 
-    async post<T = any, D = any>(
+    async post<R = unknown, D = unknown>(
         url: string,
         config?: Config<D>,
-    ): Promise<AxiosResponse<T>> {
+    ): Promise<R> {
         if (config && config.cacheable) {
             const result = this.checkCache({ ...config, url, method: 'POST' })
             if (result) {
@@ -155,6 +154,31 @@ export default abstract class Taxios {
             } 
         }
         const data = config?.data
-        return this.instance.post<T, AxiosResponse<T, D>, D>(url, data, Object.assign(Object.create({}), Taxios.config, config))
+        return this.instance.post(url, data, Object.assign(Object.create({}), Taxios.config, config))
+    }
+
+    async delete<R = unknown, D = unknown>(
+        url: string,
+        config?: Config<D>,
+    ): Promise<R> {
+        if (config && config.cacheable) {
+            const result = this.checkCache({ ...config, url, method: 'DELETE' })
+            if (result) return result
+        }
+        return this.instance.delete(url, Object.assign(Object.create({}), Taxios.config, config))
+    }
+
+    async put<R = unknown, D = unknown>(
+        url: string,
+        config?: Config<D>,
+    ): Promise<R> {
+        if (config && config.cacheable) {
+            const result = this.checkCache({ ...config, url, method: 'PUT' })
+            if (result) {
+                return await pipe(...this.responseInterceptors)(result)
+            } 
+        }
+        const data = config?.data
+        return this.instance.put(url, data, Object.assign(Object.create({}), Taxios.config, config))
     }
 }

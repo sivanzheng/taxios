@@ -25,7 +25,7 @@ export default class LRUCache {
         if (node.next) node.next.prev = node.prev
     }
 
-    public traval() {
+    public travel() {
         const result = []
         let node = this.head
         while (node) {
