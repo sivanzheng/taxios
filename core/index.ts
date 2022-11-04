@@ -137,10 +137,23 @@ export default abstract class Taxios {
         config?: Config<D>,
     ): Promise<R> {
         if (config && config.cacheable) {
-            const result = this.checkCache({ ...config, url, method: 'GET' })
-            if (result) return result
+            const result = this.checkCache({
+                ...config,
+                url,
+                method: 'GET',
+            })
+            if (result) {
+                return await pipe(...this.responseInterceptors)(result)
+            } 
         }
-        return this.instance.get(url, Object.assign(Object.create({}), Taxios.config, config))
+        return this.instance.get(
+            url,
+            Object.assign(
+                Object.create({}),
+                Taxios.config,
+                config
+            ),
+        )
     }
 
     async post<R = unknown, D = unknown>(
@@ -148,13 +161,25 @@ export default abstract class Taxios {
         config?: Config<D>,
     ): Promise<R> {
         if (config && config.cacheable) {
-            const result = this.checkCache({ ...config, url, method: 'POST' })
+            const result = this.checkCache({
+                ...config,
+                url,
+                method: 'POST',
+            })
             if (result) {
                 return await pipe(...this.responseInterceptors)(result)
             } 
         }
         const data = config?.data
-        return this.instance.post(url, data, Object.assign(Object.create({}), Taxios.config, config))
+        return this.instance.post(
+            url,
+            data,
+            Object.assign(
+                Object.create({}),
+                Taxios.config,
+                config,
+            ),
+        )
     }
 
     async delete<R = unknown, D = unknown>(
@@ -162,10 +187,23 @@ export default abstract class Taxios {
         config?: Config<D>,
     ): Promise<R> {
         if (config && config.cacheable) {
-            const result = this.checkCache({ ...config, url, method: 'DELETE' })
-            if (result) return result
+            const result = this.checkCache({
+                ...config,
+                url,
+                method: 'DELETE',
+            })
+            if (result) {
+                return await pipe(...this.responseInterceptors)(result)
+            }
         }
-        return this.instance.delete(url, Object.assign(Object.create({}), Taxios.config, config))
+        return this.instance.delete(
+            url,
+            Object.assign(
+                Object.create({}),
+                Taxios.config,
+                config,
+            ),
+        )
     }
 
     async put<R = unknown, D = unknown>(
@@ -173,12 +211,24 @@ export default abstract class Taxios {
         config?: Config<D>,
     ): Promise<R> {
         if (config && config.cacheable) {
-            const result = this.checkCache({ ...config, url, method: 'PUT' })
+            const result = this.checkCache({
+                ...config,
+                url,
+                method: 'PUT',
+            })
             if (result) {
                 return await pipe(...this.responseInterceptors)(result)
             } 
         }
         const data = config?.data
-        return this.instance.put(url, data, Object.assign(Object.create({}), Taxios.config, config))
+        return this.instance.put(
+            url,
+            data,
+            Object.assign(
+                Object.create({}),
+                Taxios.config,
+                config
+            )
+        )
     }
 }
